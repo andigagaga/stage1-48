@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Project struct {
@@ -24,34 +25,14 @@ type Project struct {
 	Java      bool
 	React     bool
 }
-
-var dataProject = []Project{
-	// {
-	// 	Id:        0,
-	// 	Name:      "Contoh Project-1",
-	// 	StarDate:  "15-05-2023",
-	// 	EndDate:   "15-06-2023",
-	// 	Duration:  "1 bulan",
-	// 	Detail:    "Bootcamp sebulan gaes",
-	// 	Playstore: true,
-	// 	Android:   true,
-	// 	Java:      true,
-	// 	React:     true,
-	// },
-
-	// {
-	// 	Id:        1,
-	// 	Name:      "Contoh Projec-2",
-	// 	StarDate:  "15-05-2023",
-	// 	EndDate:   "15-06-2023",
-	// 	Duration:  "1 bulan",
-	// 	Detail:    "Bootcamp sebulan gaes hehe",
-	// 	Playstore: true,
-	// 	Android:   true,
-	// 	Java:      true,
-	// 	React:     true,
-	// },
+type Users struct {
+	Id             int
+	Name           string
+	Email          string
+	HashedPassword string
 }
+
+var dataProject = []Project{}
 
 func main() {
 	connection.DataBaseConnect()
@@ -84,6 +65,7 @@ func main() {
 
 	// rout login
 	e.GET("/form-login", formLogin)
+	e.POST("/form-login", Login)
 
 	// rout register
 	e.GET("/form-register", formRegister)
@@ -313,15 +295,15 @@ func countDuration(d1 string, d2 string) string {
 	years := months / 12
 
 	if days < 7 {
-		return strconv.Itoa(days) + "Hari"
+		return strconv.Itoa(days) + " Hari"
 	}
 	if weeks < 4 {
-		return strconv.Itoa(weeks) + "Minggu"
+		return strconv.Itoa(weeks) + " Minggu"
 	}
 	if months < 12 {
-		return strconv.Itoa(months) + "Bulan"
+		return strconv.Itoa(months) + " Bulan"
 	}
-	return strconv.Itoa(years) + "Tahun"
+	return strconv.Itoa(years) + " Tahun"
 
 }
 
@@ -349,6 +331,29 @@ func formLogin(c echo.Context) error {
 	}
 	return tmpl.Execute(c.Response(), nil)
 }
+func Login(c echo.Context) error {
+	inputEmail := c.FormValue("inputEmail")
+	inputPassword := c.FormValue("inputPassword")
+
+	// struct
+	user := Users{}
+
+	err := connection.Conn.QueryRow(context.Background(), "SELECT id, name, email, password FROM tb_user WHERE email=$1", inputEmail).Scan(&user.Id, &user.Name, &user.Email, &user.HashedPassword)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+
+	errBcriptPassword := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(inputPassword))
+
+	if errBcriptPassword != nil {
+		return c.JSON(http.StatusInternalServerError, errBcriptPassword.Error())
+	}
+
+	return c.JSON(http.StatusOK, "yeyyyy berhasilll")
+
+	// return c.Redirect(http.StatusMovedPermanently, "/index")
+}
 func formRegister(c echo.Context) error {
 	var tmpl, err = template.ParseFiles("views/formregister.html")
 
@@ -363,9 +368,15 @@ func Register(c echo.Context) error {
 	inputEmail := c.FormValue("inputEmail")
 	inputPassword := c.FormValue("inputPassword")
 
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(inputPassword), 15)
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
 	fmt.Println(inputName, inputEmail, inputPassword)
 
-	regis, err := connection.Conn.Exec(context.Background(), "INSERT INTO tb_user (name, email, password) VALUES($1, $2, $3)", inputName, inputEmail, inputPassword)
+	regis, err := connection.Conn.Exec(context.Background(), "INSERT INTO tb_user (name, email, password) VALUES($1, $2, $3)", inputName, inputEmail, hashedPassword)
 
 	if err != nil {
 		fmt.Println("masuk kesini mas", regis.RowsAffected())
