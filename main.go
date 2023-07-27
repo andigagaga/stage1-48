@@ -63,17 +63,17 @@ func main() {
 
 	// untuk mengirim folder routing statis
 	e.Static("/public", "public")
-    // rout home
+	// rout home
 	e.GET("/hello", helloWolrd)
 	e.GET("/index", home)
-	
+
 	// rout project
 	e.GET("/addproject-data", project)
 	e.GET("/formaddproject", formproject)
 	e.GET("/project-detail/:id", projectDetail)
 	e.GET("/edit-addproject/:id", editProject)
-	e.POST("/delete-addproject/:id", deleteProject)
 	e.POST("/edit-addproject/:id", submitEditedProject)
+	e.POST("/delete-addproject/:id", deleteProject)
 	e.POST("/addproject", submitProject)
 
 	// rout contact
@@ -81,7 +81,14 @@ func main() {
 
 	// rout testimonial
 	e.GET("/testimonial", testimonial)
-    
+
+	// rout login
+	e.GET("/form-login", formLogin)
+
+	// rout register
+	e.GET("/form-register", formRegister)
+	e.POST("/form-register", Register)
+
 	// rout port my
 	e.Logger.Fatal(e.Start(":1234"))
 }
@@ -159,31 +166,10 @@ func formproject(c echo.Context) error {
 func submitProject(c echo.Context) error {
 	name := c.FormValue("input-project-title")
 	detail := c.FormValue("input-description")
+	starDate := c.FormValue("input-startdate")
+	endDate := c.FormValue("input-enddate")
+	diffUse := countDuration(starDate, endDate)
 
-	// ambil date input
-	date1 := c.FormValue("input-startdate")
-	date2 := c.FormValue("input-enddate")
-
-	// parse date input dan formatting
-	uDate1, _ := time.Parse("2006-01-02", date1)
-	starDate := uDate1.Format("2 Jan 2006")
-
-	uDate2, _ := time.Parse("2006-01-02", date2)
-	endDate := uDate2.Format("2 Jan 2006")
-
-	// perhitungan selisih
-	var diffUse string
-	timeDiff := uDate2.Sub(uDate1)
-
-	if timeDiff.Hours()/24 < 30 {
-		tampil := strconv.FormatFloat(timeDiff.Hours()/24, 'f', 0, 64)
-		diffUse = "Duration : " + tampil + " hari"
-	} else if timeDiff.Hours()/24/30 < 12 {
-		tampil := strconv.FormatFloat(timeDiff.Hours()/24/30, 'f', 0, 64)
-		diffUse = "Duration : " + tampil + " Bulan"
-	} else {
-
-	}
 	// checkbox
 	var nodejs bool
 	if c.FormValue("nodejs") == "checked" {
@@ -324,17 +310,19 @@ func countDuration(d1 string, d2 string) string {
 	days := int(diff.Hours() / 24)
 	weeks := days / 7
 	months := days / 30
+	years := months / 12
 
-	if months > 12 {
-		return strconv.Itoa(months/12) + " tahun"
+	if days < 7 {
+		return strconv.Itoa(days) + "Hari"
 	}
-	if months > 0 {
-		return strconv.Itoa(months) + " bulan"
+	if weeks < 4 {
+		return strconv.Itoa(weeks) + "Minggu"
 	}
-	if weeks > 0 {
-		return strconv.Itoa(weeks) + " minggu"
+	if months < 12 {
+		return strconv.Itoa(months) + "Bulan"
 	}
-	return strconv.Itoa(days) + " hari"
+	return strconv.Itoa(years) + "Tahun"
+
 }
 
 func contact(c echo.Context) error {
@@ -352,4 +340,37 @@ func testimonial(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 	return tmpl.Execute(c.Response(), nil)
+}
+func formLogin(c echo.Context) error {
+	var tmpl, err = template.ParseFiles("views/formlogin.html")
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+	return tmpl.Execute(c.Response(), nil)
+}
+func formRegister(c echo.Context) error {
+	var tmpl, err = template.ParseFiles("views/formregister.html")
+
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
+	}
+	return tmpl.Execute(c.Response(), nil)
+}
+func Register(c echo.Context) error {
+
+	inputName := c.FormValue("inputName")
+	inputEmail := c.FormValue("inputEmail")
+	inputPassword := c.FormValue("inputPassword")
+
+	fmt.Println(inputName, inputEmail, inputPassword)
+
+	regis, err := connection.Conn.Exec(context.Background(), "INSERT INTO tb_user (name, email, password) VALUES($1, $2, $3)", inputName, inputEmail, inputPassword)
+
+	if err != nil {
+		fmt.Println("masuk kesini mas", regis.RowsAffected())
+		return c.JSON(http.StatusInternalServerError, err.Error())
+	}
+
+	return c.Redirect(http.StatusMovedPermanently, "/form-login")
 }

@@ -1,0 +1,10 @@
+.button-login-submit:hover{
+    font-weight: bold;
+}
+.button-login:hover{
+   color:white;
+   font-weight: bold;
+}
+.input-login{
+    box-shadow: 0 0 2px black;
+}

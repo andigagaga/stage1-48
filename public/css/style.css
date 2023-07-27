@@ -20,6 +20,12 @@ nav {
 nav ul li .active {
   color: orangered !important;
 }
+.nav-link .active{
+  color: orangered !important;
+}
+.nav-link-active-log{
+  color: orangered !important;
+}
 .nav-item a{
   margin-right: 20px;
 }
