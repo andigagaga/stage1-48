@@ -47,15 +47,32 @@
                     </li>
 
                 </ul>
+                {{if .UserLoginSession.IsLogin}}
+                <h5>Hay !!!, {{.UserLoginSession.Name}}</h5>
+                <form action="/logout" method="post">
+                    <button class="bg-secondary text-white mx-3" style=" width: 100%; height: 40px;margin-left:15px;border-radius: 5px;">Log Out</button>
+                </form>
+                <div class="d-flex collapse justify-content-center">
+                    <a href="contact" class="btn btn-secondary ">Contact Me</a>
+                </div>
+                {{else}}
                 <div class="d-flex collapse justify-content-center">
                     <a href="form-register" class="btn mx-3 nav-link">Register</a>
                 </div>
                 <div class="d-flex collapse justify-content-center">
-                    <a href="form-login" class="btn mx-5 nav-link">Login</a>
+                    <a href="form-login" class="btn mx-5 nav-link-active-log">Login</a>
                 </div>
                 <div class="d-flex collapse justify-content-center">
                     <a href="contact" class="btn btn-secondary ">Contact Me</a>
                 </div>
+
+                {{end}}
+                <!-- <div class="d-flex collapse justify-content-center">
+                    <a href="form-register" class="btn mx-3 nav-link">Register</a>
+                </div>
+                <div class="d-flex collapse justify-content-center">
+                    <a href="form-login" class="btn mx-5 nav-link">Login</a>
+                </div> -->
 
 
             </div>
@@ -68,7 +85,12 @@
    
 
     <div >
-        <button class=" btn btn-dark d-flex justify-content-center mx-5 my-3" style="width: 20%;"><a class="text-decoration-none text-light" href="formaddproject">ADD PROJECT</a></button>
+        {{if .UserLoginSession.IsLogin}}
+        <div>
+            <button class=" btn btn-dark d-flex justify-content-center mx-5 my-3" style="width: 20%;"><a class="text-decoration-none text-light" href="formaddproject">ADD PROJECT</a></button>
+        </div>
+        {{end}}
+       
         <section id="project" class="d-flex mt-5 row ">
             {{range $index, $data := .Projects}}
             
@@ -103,7 +125,6 @@
                                 <i class="fa-brands fa-react"></i>
                                 {{end}}
                             </div>
-
                             <div class="button-project mb-5 " id="button-project">
                                 <form
                                 class="d-inline1"

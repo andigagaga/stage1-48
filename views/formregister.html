@@ -51,13 +51,7 @@
 
                 </ul>
                 <div class="d-flex collapse justify-content-center">
-                    <a href="form-register" class="btn mx-3 nav-link">Register</a>
-                </div>
-                <div class="d-flex collapse justify-content-center">
-                    <a href="form-login" class="btn mx-5">Login</a>
-                </div>
-                <div class="d-flex collapse justify-content-center">
-                    <a href="contact" class="btn btn-secondary nav-link-active-log">Contact Me</a>
+                    <a href="contact" class="btn btn-secondary ">Contact Me</a>
                 </div>
 
 
@@ -67,23 +61,35 @@
     <!-- navbar with boostrap akhir-->
 
     <!-- awal-form-project-with-bootstrap -->
-    
+    <div class="container d-flex justify-content-center fw-bold mt-3">
+        {{if .FlashMessage}} {{if .FlashStatus}}
+        <div class="alert alert-success alert-dismissable fade show" role="alert">
+            <strong>{{.FlashMessage}}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {{else}}
+        <div class="alert alert-danger alert-dismissable fade show" role="alert">
+            <strong>{{.FlashMessage}}</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {{end}} {{end}}
+        </div>
     <div class="container">
         <div class="row d-flex justify-content-center">
             <div class="row my-5 mx-3" style="width: 50%;">
-                <h2 class="text-center mb-5">REGISTER YOUR ACCOUNT</h2>
+                <h2 class="text-center mb-5 fw-bold">REGISTER YOUR ACCOUNT</h2>
                 <form action="/form-register" method="POST" class="mb-5">
                     <div class="mb-5">
-                        <label for="exampleInputEmail1" class="form-label">Nama</label>
+                        <label for="exampleInputEmail1" class="form-label fw-bold">Nama</label>
                         <input type="text" class="form-control input-login" name="inputName" id="text">
                       </div>
                     <div class="mb-5">
-                      <label for="exampleInputEmail1" class="form-label">Email</label>
+                      <label for="exampleInputEmail1" class="form-label fw-bold">Email</label>
                       <input type="email" class="form-control input-login" name="inputEmail" id="exampleInputEmail1" aria-describedby="emailHelp">
                     </div>
                     <div class="mb-5">
-                      <label for="exampleInputPassword1" class="form-label">Password<b style="color: red;">*</b></label>
-                      <input type="password" class="form-control input-login" name="inpuPassword" id="exampleInputPassword1">
+                      <label for="exampleInputPassword1" class="form-label fw-bold">Password<b style="color: red;" class="fw-bold">*</b></label>
+                      <input type="password" class="form-control input-login" name="inputPassword" id="exampleInputPassword1">
                     </div>
                     <div class="d-flex justify-content-end button-login-submit">
                         <button type="submit" class="btn btn-dark button-login">Submit</button>
