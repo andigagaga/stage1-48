@@ -443,6 +443,7 @@ func Register(c echo.Context) error {
 
 	fmt.Println(inputName, inputEmail, inputPassword)
 
+
 	regis, err := connection.Conn.Exec(context.Background(), "INSERT INTO tb_user (name, email, password) VALUES($1, $2, $3)", inputName, inputEmail, hashedPassword)
 	fmt.Println("masuk kesini mas", regis.RowsAffected())
 

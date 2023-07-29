@@ -48,9 +48,9 @@
 
                 </ul>
                 {{if .UserLoginSession.IsLogin}}
-                <h5>Hay !!!, {{.UserLoginSession.Name}}</h5>
-                <form action="/logout" method="post">
-                    <button class="bg-secondary text-white mx-3" style=" width: 100%; height: 40px;margin-left:15px;border-radius: 5px;">Log Out</button>
+                <h5><i class="fa-solid fa-user px-2"></i>   {{.UserLoginSession.Name}}</h5>
+                <form action="/logout" method="post" class="mx-5">
+                    <button class="bg-secondary text-white " style=" width: 100%; height: 35px;margin-left:15px;border-radius: 5px;">Log Out</button>
                 </form>
                 <div class="d-flex collapse justify-content-center">
                     <a href="contact" class="btn btn-secondary ">Contact Me</a>
@@ -125,6 +125,7 @@
                                 <i class="fa-brands fa-react"></i>
                                 {{end}}
                             </div>
+                            {{if $.UserLoginSession.IsLogin}}
                             <div class="button-project mb-5 " id="button-project">
                                 <form
                                 class="d-inline1"
@@ -145,6 +146,7 @@
                               </form>
                                 
                             </div>
+                            {{end}}
                         </div>
                     </div>
                 </div>
