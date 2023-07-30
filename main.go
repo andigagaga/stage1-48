@@ -3,6 +3,7 @@ package main
 import (
 	"batch48/connection"
 	"context"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -26,6 +27,7 @@ type Project struct {
 	Android   bool
 	Java      bool
 	React     bool
+	AuthorId  string
 }
 type Users struct {
 	Id             int
@@ -122,12 +124,16 @@ func project(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
-	data, _ := connection.Conn.Query(context.Background(), "SELECT id, name, start_date, end_date, duration, detail, playstore, android, java, react FROM tb_project")
+	data, _ := connection.Conn.Query(context.Background(), "SELECT tb_project.id, tb_user.name, tb_project.name, tb_project.start_date, tb_project.end_date, tb_project.duration, tb_project.detail, tb_project.playstore, tb_project.android, tb_project.java, tb_project.react FROM tb_project LEFT JOIN tb_user ON tb_project.author_id = tb_user.id")
 
 	var result []Project
 	for data.Next() {
+
 		var each = Project{}
-		err := data.Scan(&each.Id, &each.Name, &each.StarDate, &each.EndDate, &each.Duration, &each.Detail, &each.Playstore, &each.Android, &each.Java, &each.React)
+		var namaSementara sql.NullString
+		err := data.Scan(&each.Id, &namaSementara, &each.Name, &each.StarDate, &each.EndDate, &each.Duration, &each.Detail, &each.Playstore, &each.Android, &each.Java, &each.React)
+
+		each.AuthorId = namaSementara.String
 
 		if err != nil {
 			fmt.Println(err.Error())
@@ -136,7 +142,6 @@ func project(c echo.Context) error {
 		result = append(result, each)
 
 	}
-	
 
 	sess, _ := session.Get("session", c)
 
@@ -147,10 +152,8 @@ func project(c echo.Context) error {
 		userLoginSession.Name = sess.Values["name"].(string)
 	}
 
-
-
 	Projects := map[string]interface{}{
-		"Projects": result,
+		"Projects":         result,
 		"UserLoginSession": userLoginSession,
 	}
 
@@ -195,8 +198,9 @@ func submitProject(c echo.Context) error {
 	if c.FormValue("typescript") == "checked" {
 		typescript = true
 	}
+	sesi, _ := session.Get("session", c)
 
-	_, err := connection.Conn.Exec(context.Background(), "INSERT INTO tb_project (name, detail, start_date, end_date, duration, playstore, android, java, react) VALUES ($1 , $2, $3, $4, $5, $6, $7, $8, $9)", name, detail, starDate, endDate, diffUse, nodejs, reactjs, nextjs, typescript)
+	_, err := connection.Conn.Exec(context.Background(), "INSERT INTO tb_project (name, detail, start_date, end_date, duration, playstore, android, java, react, author_id) VALUES ($1 , $2, $3, $4, $5, $6, $7, $8, $9, $10)", name, detail, starDate, endDate, diffUse, nodejs, reactjs, nextjs, typescript, sesi.Values["id"].(int))
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -394,17 +398,16 @@ func Login(c echo.Context) error {
 	}
 
 	sesi, _ := session.Get("session", c)
-	sesi.Options.MaxAge = 10800   //3jam
+	sesi.Options.MaxAge = 10800 //3jam
 	sesi.Values["message"] = "Login Succes!!!"
 	sesi.Values["status"] = true
-	sesi.Values["name"] =user.Name
+	sesi.Values["name"] = user.Name
 	sesi.Values["email"] = user.Email
 	sesi.Values["id"] = user.Id
 	sesi.Values["isLogin"] = true
 	sesi.Save(c.Request(), c.Response())
 
 	return c.Redirect(http.StatusMovedPermanently, "/index")
-	
 
 	// return c.Redirect(http.StatusMovedPermanently, "/index")
 }
@@ -442,7 +445,6 @@ func Register(c echo.Context) error {
 	}
 
 	fmt.Println(inputName, inputEmail, inputPassword)
-
 
 	regis, err := connection.Conn.Exec(context.Background(), "INSERT INTO tb_user (name, email, password) VALUES($1, $2, $3)", inputName, inputEmail, hashedPassword)
 	fmt.Println("masuk kesini mas", regis.RowsAffected())
