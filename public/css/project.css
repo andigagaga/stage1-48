@@ -1,4 +1,4 @@
-.container{
+/* .container{
     background-color: transparent;
 }
 
@@ -14,7 +14,7 @@
     display: flex;
     justify-content: center;
     margin-top: 30px;
-    /* margin-bottom: 50px; */
+   
     font-size: 30px;
     font-weight: bold;
     
@@ -52,14 +52,17 @@
     line-height: 20px;
     text-align: justify;
 }
+.project-items-image{
+    width: 300px;
+    
+}
 .project-items-image img{
     width: 100%;
     border-radius: 8px;
     box-shadow: 0px 0px 20px;
     margin-top: 20px;
     object-fit: contain;
-    /* transition-duration: 0.2s;
-  transition-property: transform; */
+    height: 200px;
 }
 /* .project-items-image img:hover{
     border: 5px solid grey;
@@ -139,5 +142,3 @@
     font-size: large;
     
 }
-
-

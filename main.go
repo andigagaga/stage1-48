@@ -2,6 +2,7 @@ package main
 
 import (
 	"batch48/connection"
+	middleware "batch48/middlewer"
 	"context"
 	"database/sql"
 	"fmt"
@@ -28,6 +29,7 @@ type Project struct {
 	Java      bool
 	React     bool
 	AuthorId  string
+	Image     string
 }
 type Users struct {
 	Id             int
@@ -55,6 +57,8 @@ func main() {
 
 	// untuk mengirim folder routing statis
 	e.Static("/public", "public")
+
+	e.Static("/uploads", "uploads")
 	// rout home
 	e.GET("/hello", helloWolrd)
 	e.GET("/index", home)
@@ -64,9 +68,9 @@ func main() {
 	e.GET("/formaddproject", formproject)
 	e.GET("/project-detail/:id", projectDetail)
 	e.GET("/edit-addproject/:id", editProject)
-	e.POST("/edit-addproject/:id", submitEditedProject)
+	e.POST("/edit-addproject/:id", middleware.UploadFile(submitEditedProject))
 	e.POST("/delete-addproject/:id", deleteProject)
-	e.POST("/addproject", submitProject)
+	e.POST("/addproject", middleware.UploadFile(submitProject))
 
 	// rout contact
 	e.GET("/contact", contact)
@@ -124,14 +128,14 @@ func project(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 
-	data, _ := connection.Conn.Query(context.Background(), "SELECT tb_project.id, tb_user.name, tb_project.name, tb_project.start_date, tb_project.end_date, tb_project.duration, tb_project.detail, tb_project.playstore, tb_project.android, tb_project.java, tb_project.react FROM tb_project LEFT JOIN tb_user ON tb_project.author_id = tb_user.id")
+	data, _ := connection.Conn.Query(context.Background(), "SELECT tb_project.id, tb_user.name, tb_project.name, tb_project.start_date, tb_project.end_date, tb_project.duration, tb_project.detail, tb_project.playstore, tb_project.android, tb_project.java, tb_project.react, tb_project.image FROM tb_project LEFT JOIN tb_user ON tb_project.author_id = tb_user.id")
 
 	var result []Project
 	for data.Next() {
 
 		var each = Project{}
 		var namaSementara sql.NullString
-		err := data.Scan(&each.Id, &namaSementara, &each.Name, &each.StarDate, &each.EndDate, &each.Duration, &each.Detail, &each.Playstore, &each.Android, &each.Java, &each.React)
+		err := data.Scan(&each.Id, &namaSementara, &each.Name, &each.StarDate, &each.EndDate, &each.Duration, &each.Detail, &each.Playstore, &each.Android, &each.Java, &each.React, &each.Image)
 
 		each.AuthorId = namaSementara.String
 
@@ -178,6 +182,8 @@ func submitProject(c echo.Context) error {
 	endDate := c.FormValue("input-enddate")
 	diffUse := countDuration(starDate, endDate)
 
+	image := c.Get("dataFile").(string) // variabel untuk dapatkan inputa image nya
+
 	// checkbox
 	var nodejs bool
 	if c.FormValue("nodejs") == "checked" {
@@ -200,7 +206,7 @@ func submitProject(c echo.Context) error {
 	}
 	sesi, _ := session.Get("session", c)
 
-	_, err := connection.Conn.Exec(context.Background(), "INSERT INTO tb_project (name, detail, start_date, end_date, duration, playstore, android, java, react, author_id) VALUES ($1 , $2, $3, $4, $5, $6, $7, $8, $9, $10)", name, detail, starDate, endDate, diffUse, nodejs, reactjs, nextjs, typescript, sesi.Values["id"].(int))
+	_, err := connection.Conn.Exec(context.Background(), "INSERT INTO tb_project (name, detail, start_date, end_date, duration, playstore, android, java, react, author_id, image) VALUES ($1 , $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)", name, detail, starDate, endDate, diffUse, nodejs, reactjs, nextjs, typescript, sesi.Values["id"].(int), image)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
@@ -222,7 +228,7 @@ func projectDetail(c echo.Context) error {
 	var ProjectDetail = Project{}
 
 	// query row untuk nge get satu datanya
-	err := connection.Conn.QueryRow(context.Background(), "SELECT id, name, start_date, end_date, duration, detail, playstore, android, java, react FROM tb_project WHERE id=$1", idToInt).Scan(&ProjectDetail.Id, &ProjectDetail.Name, &ProjectDetail.StarDate, &ProjectDetail.EndDate, &ProjectDetail.Duration, &ProjectDetail.Detail, &ProjectDetail.Playstore, &ProjectDetail.Android, &ProjectDetail.Java, &ProjectDetail.React)
+	err := connection.Conn.QueryRow(context.Background(), "SELECT id, name, start_date, end_date, duration, detail, playstore, android, java, react, image FROM tb_project WHERE id=$1", idToInt).Scan(&ProjectDetail.Id, &ProjectDetail.Name, &ProjectDetail.StarDate, &ProjectDetail.EndDate, &ProjectDetail.Duration, &ProjectDetail.Detail, &ProjectDetail.Playstore, &ProjectDetail.Android, &ProjectDetail.Java, &ProjectDetail.React, &ProjectDetail.Image)
 
 	fmt.Println("ini data blog detail", err)
 
@@ -245,7 +251,7 @@ func editProject(c echo.Context) error {
 
 	var ProjectDetail = Project{}
 
-	err := connection.Conn.QueryRow(context.Background(), "SELECT * FROM tb_project WHERE id=$1", id).Scan(&ProjectDetail.Id, &ProjectDetail.Name, &ProjectDetail.StarDate, &ProjectDetail.EndDate, &ProjectDetail.Duration, &ProjectDetail.Detail, &ProjectDetail.Playstore, &ProjectDetail.Android, &ProjectDetail.Java, &ProjectDetail.React)
+	err := connection.Conn.QueryRow(context.Background(), "SELECT * FROM tb_project WHERE id=$1", id).Scan(&ProjectDetail.Id, &ProjectDetail.Name, &ProjectDetail.StarDate, &ProjectDetail.EndDate, &ProjectDetail.Duration, &ProjectDetail.Detail, &ProjectDetail.Playstore, &ProjectDetail.Android, &ProjectDetail.Java, &ProjectDetail.React, &ProjectDetail.AuthorId, &ProjectDetail.Image)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message query": err.Error()})
@@ -272,6 +278,8 @@ func submitEditedProject(c echo.Context) error {
 	endDate := c.FormValue("input-enddate")
 	duration := countDuration(starDate, endDate)
 
+	image := c.Get("dataFile").(string)
+
 	detail := c.FormValue("input-description")
 	// checkbox
 	var playstore bool
@@ -295,7 +303,7 @@ func submitEditedProject(c echo.Context) error {
 	}
 
 	// dataProject[id] = editedProject
-	_, err := connection.Conn.Exec(context.Background(), "UPDATE tb_project SET name=$1, start_date=$2, end_date=$3, duration=$4, detail=$5, playstore=$6, android=$7, java=$8, react=$9 WHERE id=$10", name, starDate, endDate, duration, detail, playstore, android, java, react, id)
+	_, err := connection.Conn.Exec(context.Background(), "UPDATE tb_project SET name=$1, start_date=$2, end_date=$3, duration=$4, detail=$5, playstore=$6, android=$7, java=$8, react=$9,image=$10 WHERE id=$11", name, starDate, endDate, duration, detail, playstore, android, java, react, image, id)
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
@@ -460,7 +468,7 @@ func Logout(c echo.Context) error {
 	sesi.Options.MaxAge = -1
 	sesi.Save(c.Request(), c.Response())
 
-	return c.Redirect(http.StatusMovedPermanently, "/index")
+	return c.Redirect(http.StatusMovedPermanently, "/addproject-data")
 }
 func redirectWithMessage(c echo.Context, message string, status bool, patch string) error {
 	sesi, errsesi := session.Get("session", c)

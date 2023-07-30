@@ -18,7 +18,7 @@
 
     <!-- navbar with boostrap awal-->
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
-        <div class="container-fluid">
+        <div class="container">
             <a class="navbar-brand text-warning" href="#">ANDI<b class="text-bos">bos</b></a>
             <button class="navbar-toggler " type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
@@ -62,20 +62,23 @@
     
     <!-- container with bootstrap awal-->
     <section class="profile container-fluid" id="profile">
+        <div class="d-flex justify-content-center fw-bold mt-3">
+            {{if .FlashMessage}} {{if .FlashStatus}}
+            <div class="alert alert-success alert-dismissable fade show" role="alert">
+                <strong>{{.FlashMessage}}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {{else}}
+            <div class="alert alert-danger alert-dismissable fade show" role="alert">
+                <strong>{{.FlashMessage}}</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {{end}} {{end}}
+                
+        </div>
+       
         <div class="container">
-            <div class="container d-flex justify-content-center fw-bold mt-3">
-                {{if .FlashMessage}} {{if .FlashStatus}}
-                <div class="alert alert-success alert-dismissable fade show" role="alert">
-                    <strong>{{.FlashMessage}}</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {{else}}
-                <div class="alert alert-danger alert-dismissable fade show" role="alert">
-                    <strong>{{.FlashMessage}}</strong>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {{end}} {{end}}
-                </div>
+           
         
             <div class="row justify-content-between bg-home">
                 <div class="col-md-6 p-5 mt-5 text-black ">
