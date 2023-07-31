@@ -227,16 +227,33 @@ func projectDetail(c echo.Context) error {
 
 	var ProjectDetail = Project{}
 
+	var NamaAuthor sql.NullString
+
 	// query row untuk nge get satu datanya
-	err := connection.Conn.QueryRow(context.Background(), "SELECT id, name, start_date, end_date, duration, detail, playstore, android, java, react, image FROM tb_project WHERE id=$1", idToInt).Scan(&ProjectDetail.Id, &ProjectDetail.Name, &ProjectDetail.StarDate, &ProjectDetail.EndDate, &ProjectDetail.Duration, &ProjectDetail.Detail, &ProjectDetail.Playstore, &ProjectDetail.Android, &ProjectDetail.Java, &ProjectDetail.React, &ProjectDetail.Image)
+	err := connection.Conn.QueryRow(context.Background(), "SELECT tb_project.id, tb_user.name, tb_project.name, tb_project.start_date, tb_project.end_date, tb_project.duration, tb_project.detail, tb_project.playstore, tb_project.android, tb_project.java, tb_project.react, tb_project.image FROM tb_project LEFT JOIN tb_user ON tb_project.author_id = tb_user.id WHERE tb_project.id=$1", idToInt).Scan(&ProjectDetail.Id, &NamaAuthor, &ProjectDetail.Name, &ProjectDetail.StarDate, &ProjectDetail.EndDate, &ProjectDetail.Duration, &ProjectDetail.Detail, &ProjectDetail.Playstore, &ProjectDetail.Android, &ProjectDetail.Java, &ProjectDetail.React, &ProjectDetail.Image)
+
+	// Id        int
+	// Name      string
+	// StarDate  string
+	// EndDate   string
+	// Duration  string
+	// Detail    string
+	// Playstore bool
+	// Android   bool
+	// Java      bool
+	// React     bool
+	// AuthorId  string
+	// Image     string
 
 	fmt.Println("ini data blog detail", err)
+
+	ProjectDetail.AuthorId = NamaAuthor.String
 
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, map[string]string{"message": err.Error()})
 	}
 	data := map[string]interface{}{
-		"Id":      id,
+		"id":      id,
 		"Project": ProjectDetail,
 	}
 
